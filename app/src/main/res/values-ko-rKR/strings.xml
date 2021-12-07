@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WebRTC Sample</string>
+    <string name="error_msg_input_box_empty">채팅방 이름을 입력해 주세요</string>
+    <string name="error_msg_already_use_room">이미 사용중인 채팅방입니다</string>
+    <string name="error_msg_new_room">다른 채팅방을 사용해 주세요</string>
+
+</resources>

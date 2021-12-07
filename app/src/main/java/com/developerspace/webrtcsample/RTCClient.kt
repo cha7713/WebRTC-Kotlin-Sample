@@ -9,8 +9,8 @@ import org.webrtc.*
 
 
 class RTCClient(
-        context: Application,
-        observer: PeerConnection.Observer
+    context: Application,
+    observer: PeerConnection.Observer
 ) {
 
     companion object {
@@ -20,11 +20,11 @@ class RTCClient(
 
     private val rootEglBase: EglBase = EglBase.create()
 
-    private var localAudioTrack : AudioTrack? = null
-    private var localVideoTrack : VideoTrack? = null
+    private var localAudioTrack: AudioTrack? = null
+    private var localVideoTrack: VideoTrack? = null
     val TAG = "RTCClient"
 
-    var remoteSessionDescription : SessionDescription? = null
+    var remoteSessionDescription: SessionDescription? = null
 
     val db = Firebase.firestore
 
@@ -33,50 +33,60 @@ class RTCClient(
     }
 
     private val iceServer = listOf(
-            PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
-                    .createIceServer()
+        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
+            .createIceServer(),
+        PeerConnection.IceServer.builder("turn:121.138.60.100:3478").setPassword(BuildConfig.TURN_USER).setUsername(BuildConfig.TURN_PW)
+            .createIceServer(),
+        PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302")
+            .createIceServer(),
+        PeerConnection.IceServer.builder("stun:stun2.l.google.com:19302")
+            .createIceServer(),
+        PeerConnection.IceServer.builder("stun:stun3.l.google.com:19302")
+            .createIceServer(),
+        PeerConnection.IceServer.builder("stun:stun4.l.google.com:19302")
+            .createIceServer(),
     )
 
     private val peerConnectionFactory by lazy { buildPeerConnectionFactory() }
     private val videoCapturer by lazy { getVideoCapturer(context) }
 
-    private val audioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints())}
+    private val audioSource by lazy { peerConnectionFactory.createAudioSource(MediaConstraints()) }
     private val localVideoSource by lazy { peerConnectionFactory.createVideoSource(false) }
     private val peerConnection by lazy { buildPeerConnection(observer) }
 
     private fun initPeerConnectionFactory(context: Application) {
         val options = PeerConnectionFactory.InitializationOptions.builder(context)
-                .setEnableInternalTracer(true)
-                .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
-                .createInitializationOptions()
+            .setEnableInternalTracer(true)
+            .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
+            .createInitializationOptions()
         PeerConnectionFactory.initialize(options)
     }
 
     private fun buildPeerConnectionFactory(): PeerConnectionFactory {
         return PeerConnectionFactory
-                .builder()
-                .setVideoDecoderFactory(DefaultVideoDecoderFactory(rootEglBase.eglBaseContext))
-                .setVideoEncoderFactory(DefaultVideoEncoderFactory(rootEglBase.eglBaseContext, true, true))
-                .setOptions(PeerConnectionFactory.Options().apply {
-                    disableEncryption = true
-                    disableNetworkMonitor = true
-                })
-                .createPeerConnectionFactory()
+            .builder()
+            .setVideoDecoderFactory(DefaultVideoDecoderFactory(rootEglBase.eglBaseContext))
+            .setVideoEncoderFactory(DefaultVideoEncoderFactory(rootEglBase.eglBaseContext, true, true))
+            .setOptions(PeerConnectionFactory.Options().apply {
+                disableEncryption = true
+                disableNetworkMonitor = true
+            })
+            .createPeerConnectionFactory()
     }
 
     private fun buildPeerConnection(observer: PeerConnection.Observer) = peerConnectionFactory.createPeerConnection(
-            iceServer,
-            observer
+        iceServer,
+        observer
     )
 
     private fun getVideoCapturer(context: Context) =
-            Camera2Enumerator(context).run {
-                deviceNames.find {
-                    isFrontFacing(it)
-                }?.let {
-                    createCapturer(it, null)
-                } ?: throw IllegalStateException()
-            }
+        Camera2Enumerator(context).run {
+            deviceNames.find {
+                isFrontFacing(it)
+            }?.let {
+                createCapturer(it, null)
+            } ?: throw IllegalStateException()
+        }
 
     fun initSurfaceView(view: SurfaceViewRenderer) = view.run {
         setMirror(true)
@@ -111,17 +121,17 @@ class RTCClient(
 
                     override fun onSetSuccess() {
                         val offer = hashMapOf(
-                                "sdp" to desc?.description,
-                                "type" to desc?.type
+                            "sdp" to desc?.description,
+                            "type" to desc?.type
                         )
                         db.collection("calls").document(meetingID)
-                                .set(offer)
-                                .addOnSuccessListener {
-                                    Log.e(TAG, "DocumentSnapshot added")
-                                }
-                                .addOnFailureListener { e ->
-                                    Log.e(TAG, "Error adding document", e)
-                                }
+                            .set(offer)
+                            .addOnSuccessListener {
+                                Log.e(TAG, "DocumentSnapshot added")
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e(TAG, "Error adding document", e)
+                            }
                         Log.e(TAG, "onSetSuccess")
                     }
 
@@ -153,17 +163,17 @@ class RTCClient(
         createAnswer(object : SdpObserver by sdpObserver {
             override fun onCreateSuccess(desc: SessionDescription?) {
                 val answer = hashMapOf(
-                        "sdp" to desc?.description,
-                        "type" to desc?.type
+                    "sdp" to desc?.description,
+                    "type" to desc?.type
                 )
                 db.collection("calls").document(meetingID)
-                        .set(answer)
-                        .addOnSuccessListener {
-                            Log.e(TAG, "DocumentSnapshot added")
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e(TAG, "Error adding document", e)
-                        }
+                    .set(answer)
+                    .addOnSuccessListener {
+                        Log.e(TAG, "DocumentSnapshot added")
+                    }
+                    .addOnFailureListener { e ->
+                        Log.e(TAG, "Error adding document", e)
+                    }
                 setLocalDescription(object : SdpObserver {
                     override fun onSetFailure(p0: String?) {
                         Log.e(TAG, "onSetFailure: $p0")
@@ -222,36 +232,42 @@ class RTCClient(
 
     fun endCall(meetingID: String) {
         db.collection("calls").document(meetingID).collection("candidates")
-                .get().addOnSuccessListener {
-                    val iceCandidateArray: MutableList<IceCandidate> = mutableListOf()
-                    for ( dataSnapshot in it) {
-                        if (dataSnapshot.contains("type") && dataSnapshot["type"]=="offerCandidate") {
-                            val offerCandidate = dataSnapshot
-                            iceCandidateArray.add(IceCandidate(offerCandidate["sdpMid"].toString(), Math.toIntExact(offerCandidate["sdpMLineIndex"] as Long), offerCandidate["sdp"].toString()))
-                        } else if (dataSnapshot.contains("type") && dataSnapshot["type"]=="answerCandidate") {
-                            val answerCandidate = dataSnapshot
-                            iceCandidateArray.add(IceCandidate(answerCandidate["sdpMid"].toString(), Math.toIntExact(answerCandidate["sdpMLineIndex"] as Long), answerCandidate["sdp"].toString()))
-                        }
+            .get().addOnSuccessListener {
+                val iceCandidateArray: MutableList<IceCandidate> = mutableListOf()
+                for (dataSnapshot in it) {
+//                    if (dataSnapshot.contains("type") && dataSnapshot["type"] == "offerCandidate") {
+                    val sdpMLineIndex = dataSnapshot["sdpMLineIndex"] as List<String>
+                    val sdpMid = dataSnapshot["sdpMid"] as List<String>
+                    val sdpCandidate = dataSnapshot["sdpCandidate"] as List<String>
+                    for (i in 0..sdpCandidate.lastIndex) {
+                        iceCandidateArray.add(
+                            IceCandidate(
+                                sdpMid[i],
+                                Math.toIntExact(sdpMLineIndex[i].toLong()),
+                                sdpCandidate[i]
+                            )
+                        )
                     }
-                    peerConnection?.removeIceCandidates(iceCandidateArray.toTypedArray())
                 }
+                peerConnection?.removeIceCandidates(iceCandidateArray.toTypedArray())
+            }
         val endCall = hashMapOf(
-                "type" to "END_CALL"
+            "type" to "END_CALL"
         )
         db.collection("calls").document(meetingID)
-                .set(endCall)
-                .addOnSuccessListener {
-                    Log.e(TAG, "DocumentSnapshot added")
-                }
-                .addOnFailureListener { e ->
-                    Log.e(TAG, "Error adding document", e)
-                }
+            .set(endCall)
+            .addOnSuccessListener {
+                Log.e(TAG, "DocumentSnapshot added")
+            }
+            .addOnFailureListener { e ->
+                Log.e(TAG, "Error adding document", e)
+            }
 
         peerConnection?.close()
     }
 
     fun enableVideo(videoEnabled: Boolean) {
-        if (localVideoTrack !=null)
+        if (localVideoTrack != null)
             localVideoTrack?.setEnabled(videoEnabled)
     }
 
@@ -259,6 +275,7 @@ class RTCClient(
         if (localAudioTrack != null)
             localAudioTrack?.setEnabled(audioEnabled)
     }
+
     fun switchCamera() {
         videoCapturer.switchCamera(null)
     }

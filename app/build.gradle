@@ -2,21 +2,26 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id 'kotlin-android-extensions'
+    id 'com.google.gms.google-services'
 }
-apply plugin: 'com.google.gms.google-services'
+def apikeyPropertiesFile = rootProject.file("apikey.properties")
+def apikeyProperties = new Properties()
+apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
 
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "com.dwarsh.webrtcsample"
+        applicationId "com.developerspace.webrtcsample"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "TURN_USER", apikeyProperties['TURN_USER'])
+        buildConfigField("String", "TURN_PW", apikeyProperties['TURN_PW'])
     }
 
     buildTypes {
@@ -57,7 +62,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.2.1")
     implementation 'org.webrtc:google-webrtc:1.0.32006'
-    implementation platform('com.google.firebase:firebase-bom:27.0.0')
+    implementation platform('com.google.firebase:firebase-bom:29.0.1')
     implementation 'com.google.firebase:firebase-analytics-ktx'
     // Declare the dependency for the Cloud Firestore library
     // When using the BoM, you don't specify versions in Firebase library dependencies

@@ -2,4 +2,7 @@
     <string name="app_name">WebRTC Sample</string>
     <string name="pref_speakerphone_key">speakerphone_preference</string>
     <string name="pref_speakerphone_default">auto</string>
+    <string name="error_msg_input_box_empty">Please enter meeting ID</string>
+    <string name="error_msg_already_use_room">It\'s a meeting ID that\'s already in use</string>
+    <string name="error_msg_new_room">Please enter new meeting ID</string>
 </resources>
